@@ -12,72 +12,91 @@ colorRed() {
         echo -ne "${red}${1}${clear}"
 }
 
-main() {
+greetings() {
 clear
 
-echo -ne "| Hi! Welcome to my simple password generator based on /dev/urandom. |"
-printf "\n"
-echo "----------------------------------------------------------------------"
-printf "\n"
-read -p "Here we go? " go
-if ! [[ $go =~ ^(yes|y|yup|yeah|start!|go)$ ]] ; then
-        echo "$(colorRed 'Bye!')" ; exit 1
-fi
+        echo -ne "| Hi! Welcome to my simple password generator based on /dev/urandom. |"
+        printf "\n"
+        echo "----------------------------------------------------------------------"
+        printf "\n"
+        read -p "Here we go? " go
 
-printf "\n"
-read -p "Enter password length (5 - 20 symbols): " passLength
-printf "\n"
+                if ! [[ $go =~ ^(yes|y|yup|yeah|start!|go|start)$ ]] ; then
+                        echo "$(colorRed 'Bye!')" ; exit 1
+                fi
+}
 
-if [[ -n $passLength ]] && [[ $passLength -ge 5 ]] && [[ $passLength -le 20 ]] ; then
+askLength() {
+        while true ; do
+                read -p "Enter password length (5 - 20 symbols): " passLength
+                printf "\n"
+                        if [[ -n $passLength ]] && [[ $passLength =~ ^[0-9]+$ ]] && [[ $passLength -ge 5 ]] && [[ $passLength -le 20 ]] ; then
+                                return 0
+                        fi
+                echo "$(colorRed 'Incorrect length!') Give me numbers, bro." ; sleep 5
+        done
+}
+
+askCount() {
+        while true ; do
         read -p "How many passwords do u need? " passCount
         printf "\n"
-        if [[ $passCount -lt 1 ]]
-        then
-                echo "$(colorRed 'Quantity cant be < 1, try again ')" ; sleep 8 ; main
-        elif [[ $passCount -gt 50 ]]
-        then
-                echo "Do u really need that much? Huh?!" ; sleep 8 ; main
+                if [[ -n $passCount ]] && [[ $passCount =~ ^[0-9]+$ ]] && [[ $passCount -ge 1 ]] && [[ $passCount -le 50 ]] ; then
+                        return 0
+                fi
+                echo "$(colorRed 'Incorrect count!') Try number between 1 and 50." ; sleep 5
+        done
+}
+
+symbols() {
+        while true ; do
+                read -p "Can I use special symbols? " specSymbols
+                printf "\n"
+                        case $specSymbols in
+                                yes|yup|y|yeah|sure|ok) return 0 ;;
+                                no|nope|n|ne|net) return 1 ;;
+                                *) echo "$(colorRed 'Incorrect input!') Try <yes> or <no>." ; sleep 5 ;;
+                        esac
+        done
+}
+
+generator() {
+        local length=$1
+        local useSymbols=$2
+        if [[ $useSymbols -eq 0 ]] ; then
+                        echo -ne "-> " ; tr -dc 'A-Za-z0-9!@#$%^&?*_' < /dev/urandom | head -c $length ;
+                        echo
+        else
+                        echo -ne "-> " ; tr -dc 'A-Za-z0-9' < /dev/urandom | head -c $length ;
+                        echo
         fi
-        read -p "Can I use special symbols? " specSymbols
-        printf "\n"
-                case $specSymbols in
-                        yes | yup | y | yeah | sure | "damn yes" | ok | da | 1)
-                                echo -n "Password generator started, please wait"
-                                sleep 1
-                                echo -n "."
-                                sleep 1
-                                echo -n "."
-                                sleep 1
-                                echo -n "."
-                                sleep 2
-                                echo ""
-                                echo "$(colorGreen 'Passwords generated successfully!')" ;
-                                for ((i = 0 ; i < $passCount ; i++))
-                                do
-                                tr -dc 'A-Za-z0-9!@#$%^&?*_' < /dev/urandom | head -c $passLength ;
-                                echo
-                                done ;;
-                        no | not | net | ne | n | nope | 2)
-                                echo -n "Passwords generator started, please wait"
-                                sleep 1
-                                echo -n "."
-                                sleep 1
-                                echo -n "."
-                                sleep 1
-                                echo -n "."
-                                sleep 2
-                                echo ""
-                                echo "$(colorGreen 'Password generated successfully!') " ;
-                                for ((i = 0 ; i < $passCount ; i++))
-                                do
-                                tr -dc 'A-Za-z0-9' < /dev/urandom | head -c $passLength ;
-                                echo
-                                done ;;
-                        *) echo "$(colorRed 'Incorret input, try <yes> or <no> instead') "; sleep 5 ; main ;;
-                esac
-else
-        echo $(colorRed 'Incorrect length!') ; sleep 8 ; main
-fi
+}
+
+main() {
+        greetings
+        askLength
+        askCount
+        if symbols ; then
+                useSymbols=0
+        else
+                useSymbols=1
+        fi
+                echo -n "Password generator started, please wait"
+                        sleep 1
+                echo -n "."
+                        sleep 1
+                echo -n "."
+                        sleep 1
+                echo -n "."
+                        sleep 2
+                echo ""
+                echo "$(colorGreen 'Passwords generated successfully!')" ;
+        for ((i = 0 ; i < $passCount ; i++)) ;
+        do
+                generator "$passLength" "$useSymbols"
+        done
+
+        echo "$(colorGreen 'Done!')"
 }
 
 main
