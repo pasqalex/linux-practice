@@ -3,7 +3,7 @@
 LOG_DIR="<your path>"
 SRC_DIR="<your path>"
 
-exec >> "$pathToLog/backup.log" 2>&1
+exec >> "$LOG_DIR/backup.log" 2>&1
 
 DATE="$(date +%d-%m-%Y\ %H:%M:%S)"
 
@@ -12,7 +12,7 @@ back() {
 
 while [ $count -lt 5 ]
 do
-  if tar -czf "$pathToLog/backup-$(date +%F).tar.gz" -C "$pathToTar" .
+  if tar -czf "$LOG_DIR/backup-$(date +%F).tar.gz" -C "$SRC_DIR" .
   then
 	  echo "Backup успешно создан! $DATE "
 	  echo "----------------------------------------"
